@@ -21,15 +21,23 @@ $trips = [
 
 $connections = [
     // T1
-    [
+    1 => [
         'from' => 'A',
-        'to' => 'B',
+        'to' => 'C',
         'departure' => 0,
         'arrival' => 10,
         'trip' => 'T1',
         'change_time' => 4,
     ],
-    [
+    2 => [
+        'from' => 'C',
+        'to' => 'B',
+        'departure' => 12,
+        'arrival' => 18,
+        'trip' => 'T1',
+        'change_time' => 4,
+    ],
+    3 => [
         'from' => 'B',
         'to' => 'D',
         'departure' => 10,
@@ -37,16 +45,16 @@ $connections = [
         'trip' => 'T1',
         'change_time' => 4,
     ],
-    [
-        'from' => 'D',
-        'to' => 'E',
-        'departure' => 20,
-        'arrival' => 30,
-        'trip' => 'T1',
-        'change_time' => 4,
-    ],
+//    [
+//        'from' => 'D',
+//        'to' => 'E',
+//        'departure' => 20,
+//        'arrival' => 30,
+//        'trip' => 'T1',
+//        'change_time' => 4,
+//    ],
     // T2
-    [
+    4 => [
         'from' => 'A',
         'to' => 'B',
         'departure' => 10,
@@ -54,7 +62,7 @@ $connections = [
         'trip' => 'T2',
         'change_time' => 4,
     ],
-    [
+    5 => [
         'from' => 'B',
         'to' => 'D',
         'departure' => 20,
@@ -62,14 +70,14 @@ $connections = [
         'trip' => 'T2',
         'change_time' => 4,
     ],
-    [
-        'from' => 'D',
-        'to' => 'E',
-        'departure' => 30,
-        'arrival' => 40,
-        'trip' => 'T2',
-        'change_time' => 4,
-    ],
+//    [
+//        'from' => 'D',
+//        'to' => 'E',
+//        'departure' => 30,
+//        'arrival' => 40,
+//        'trip' => 'T2',
+//        'change_time' => 4,
+//    ],
 //    // T3
 //    [
 //        'from' => 'B',
@@ -117,19 +125,26 @@ $connections = [
 ];
 
 // sort by departure desc
-usort($connections, function ($c1, $c2) {
-//    return $c1['departure'] - $c2['departure'];
+uasort($connections, function ($c1, $c2) {
     return $c2['departure'] - $c1['departure'];
 });
 
 //print_r($connections); die();
 
-$profiles = array_fill_keys(array_values($stops), [['departure' => PHP_INT_MAX, 'arrival' => PHP_INT_MAX]]);
+$profiles = array_fill_keys(array_values($stops), [
+    [
+        'departure_start' => PHP_INT_MAX,
+        'arrival_end' => PHP_INT_MAX,
+        'enter_conn' => null,
+        'exit_conn' => null,
+    ],
+]);
 $tripsEA = array_fill_keys(array_values($trips), PHP_INT_MAX);
+$tripsExitConn = array_fill_keys(array_values($trips), null);
 
 // input
 $from = 'A';
-$to = 'E';
+$to = 'D';
 $departureTimestamp = -1;
 
 // --------------------------
@@ -143,13 +158,14 @@ foreach ($connections as $cI => $c) {
     // exit?
     if ($c['to'] == $to) {
         $t = min($t, $c['arrival']);
+        $tripsExitConn[$c['trip']] = $cI;
     }
 
     // Evaluating profile.
     // Can we exit and use a new connection?
-    foreach ($profiles[$c['to']]  as $pr) {
-        if ($c['arrival'] <= $pr['departure']) {
-            $t = min($t, $pr['arrival']);
+    foreach ($profiles[$c['to']] as $pr) {
+        if ($c['arrival'] <= $pr['departure_start']) {
+            $t = min($t, $pr['arrival_end']);
             break;
         }
     }
@@ -158,11 +174,20 @@ foreach ($connections as $cI => $c) {
     $tripsEA[$c['trip']] = $t;
 
     // Update the profiles
-    if ($t < $profiles[$c['from']][0]['arrival']) {
-        if ($c['departure'] == $profiles[$c['from']][0]['departure']) {
-            $profiles[$c['from']][0]['arrival'] = $t;
+    if ($t < $profiles[$c['from']][0]['arrival_end']) {
+        if ($c['departure'] == $profiles[$c['from']][0]['departure_start']) {
+            // todo: what is this?
+            $profiles[$c['from']][0]['arrival_end'] = $t;
         } else {
-            array_unshift($profiles[$c['from']], ['departure' => $c['departure'], 'arrival' => $t]);
+            array_unshift(
+                $profiles[$c['from']],
+                [
+                    'departure_start' => $c['departure'],
+                    'arrival_end' => $t,
+                    'enter_conn' => $cI,
+                    'exit_conn' => $tripsExitConn[$c['trip']],
+                ]
+            );
         }
     }
 }
