@@ -79,22 +79,22 @@ $connections = [
         'change_time' => 4,
     ],
 //    // T3
-    7 => [
-        'from' => 'B',
-        'to' => 'D',
-        'departure' => 10,
-        'arrival' => 20,
-        'trip' => 'T3',
-        'change_time' => 4,
-    ],
-    8 => [
-        'from' => 'D',
-        'to' => 'E',
-        'departure' => 20,
-        'arrival' => 28,
-        'trip' => 'T3',
-        'change_time' => 4,
-    ],
+//    7 => [
+//        'from' => 'B',
+//        'to' => 'D',
+//        'departure' => 10,
+//        'arrival' => 20,
+//        'trip' => 'T3',
+//        'change_time' => 4,
+//    ],
+//    8 => [
+//        'from' => 'D',
+//        'to' => 'E',
+//        'departure' => 20,
+//        'arrival' => 28,
+//        'trip' => 'T3',
+//        'change_time' => 4,
+//    ],
 //    // T4
 //    [
 //        'from' => 'C',
@@ -156,7 +156,7 @@ $tripsExitConn = array_fill_keys(array_values($trips), null);
 
 // input
 $from = 'A';
-$to = 'E';
+$to = 'D';
 $departureTimestamp = -1;
 
 // --------------------------
@@ -170,7 +170,6 @@ foreach ($connections as $cI => $c) {
     // exit?
     if ($c['to'] == $to) {
         $t = min($t, $c['arrival']);
-        $tripsExitConn[$c['trip']] = $cI;
     }
 
     // Evaluating profile.
@@ -183,7 +182,10 @@ foreach ($connections as $cI => $c) {
     }
 
     // t now contains the earliest arrival time over all journeys starting in c
-    $tripsEA[$c['trip']] = $t;
+    if ($t < $tripsEA[$c['trip']]) {
+        $tripsEA[$c['trip']] = $t;
+        $tripsExitConn[$c['trip']] = $cI;
+    }
 
     // Update the profiles
     if ($t < $profiles[$c['from']][0]['arrival_end']) {
@@ -211,6 +213,7 @@ foreach ($connections as $cI => $c) {
 // P[x] is now the full profile from x to the target_stop for every stop x
 print_r($profiles);
 print_r($tripsEA);
+print_r($tripsExitConn);
 
 
 return;
