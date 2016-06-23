@@ -6,17 +6,11 @@ $stops = [
     3 => 'C',
     4 => 'D',
     5 => 'E',
-    6 => 'F',
-    7 => 'H',
-    8 => 'I',
 ];
 
 $trips = [
     1 => 'T1',
     2 => 'T2',
-    3 => 'T3',
-    4 => 'T4',
-    5 => 'T5',
 ];
 
 $connections = [
@@ -29,15 +23,7 @@ $connections = [
         'trip' => 'T1',
         'change_time' => 4,
     ],
-//    2 => [
-//        'from' => 'C',
-//        'to' => 'B',
-//        'departure' => 10,
-//        'arrival' => 18,
-//        'trip' => 'T1',
-//        'change_time' => 4,
-//    ],
-    3 => [
+    2 => [
         'from' => 'B',
         'to' => 'D',
         'departure' => 10,
@@ -45,7 +31,7 @@ $connections = [
         'trip' => 'T1',
         'change_time' => 4,
     ],
-    9 => [
+    3 => [
         'from' => 'D',
         'to' => 'E',
         'departure' => 20,
@@ -78,58 +64,6 @@ $connections = [
         'trip' => 'T2',
         'change_time' => 4,
     ],
-//    // T3
-//    7 => [
-//        'from' => 'B',
-//        'to' => 'D',
-//        'departure' => 10,
-//        'arrival' => 20,
-//        'trip' => 'T3',
-//        'change_time' => 4,
-//    ],
-//    8 => [
-//        'from' => 'D',
-//        'to' => 'E',
-//        'departure' => 20,
-//        'arrival' => 28,
-//        'trip' => 'T3',
-//        'change_time' => 4,
-//    ],
-//    // T4
-//    [
-//        'from' => 'C',
-//        'to' => 'F',
-//        'departure' => 25,
-//        'arrival' => 26,
-//        'trip' => 'T4',
-//        'change_time' => 4,
-//    ],
-//    // T5
-//    [
-//        'from' => 'H',
-//        'to' => 'E',
-//        'departure' => 25,
-//        'arrival' => 35,
-//        'trip' => 'T5',
-//        'change_time' => 4,
-//    ],
-//    [
-//        'from' => 'E',
-//        'to' => 'I',
-//        'departure' => 35,
-//        'arrival' => 45,
-//        'trip' => 'T5',
-//        'change_time' => 5,
-//    ],
-//    // T6
-//    [
-//        'from' => 'B',
-//        'to' => 'E',
-//        'departure' => 17,
-//        'arrival' => 50,
-//        'trip' => 'T6',
-//        'change_time' => 4,
-//    ],
 ];
 
 // sort by departure desc
@@ -137,8 +71,7 @@ uasort($connections, function ($c1, $c2) {
     return $c2['departure'] - $c1['departure'];
 });
 
-//print_r($connections); die();
-
+// Initial profiles
 $profiles = array_fill_keys(array_values($stops), [
     [
         'departure_start' => PHP_INT_MAX,
@@ -149,10 +82,6 @@ $profiles = array_fill_keys(array_values($stops), [
 ]);
 $tripsEA = array_fill_keys(array_values($trips), PHP_INT_MAX);
 $tripsExitConn = array_fill_keys(array_values($trips), null);
-
-// todo: cEval? regardless of target stop
-// Hange ¨ (cdeptime, min(t, P(cdepstop)[front]. arrtime))
-//  an den Anfang von P(cdepstop);
 
 // input
 $from = 'A';
@@ -173,7 +102,6 @@ foreach ($connections as $cI => $c) {
     }
 
     // Evaluating profile.
-    // Can we exit and use a new connection?
     foreach ($profiles[$c['to']] as $pr) {
         if ($c['arrival'] <= $pr['departure_start']) {
             $t = min($t, $pr['arrival_end']);
@@ -215,58 +143,5 @@ print_r($profiles);
 print_r($tripsEA);
 print_r($tripsExitConn);
 
-
-return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//if (! isset($inConnections[$to])) {
-if ($inConnections[$to] === null) {
-    printf("No path from %s to %s at %s\n", $from, $to, $departureTimestamp);
-    exit();
-}
-
-// Build path
-$path = [];
-$connectionIndex = $inConnections[$to];
-while ($connectionIndex !== null) {
-    $connection = $connections[$connectionIndex];
-    array_unshift($path, $connection);
-    $connectionIndex = $inConnections[$connection['from']];
-
-    //$connectionIndex = isset($inConnections[$connection['from']])
-    //    ? $inConnections[$connection['from']]
-    //    : null;
-}
-
-foreach ($path as $p) {
-    printf("From %s to %s [%d, %d], trip %s\n", $p['from'], $p['to'], $p['departure'], $p['arrival'], $p['trip']);
-}
 
 echo PHP_EOL;
