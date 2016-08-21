@@ -177,9 +177,29 @@ foreach ($connections as $cI => $c) {
 
 // ------------------ Results -----------------------
 
-print_r($profiles);
-print_r($tripsEA);
-print_r($tripsExitConn);
+echo 'Stops:' . PHP_EOL;
+foreach ($profiles as $stop => $stopPrs) {
+    foreach ($stopPrs as $profile) {
+        if (PHP_INT_MAX === $profile['departure_start'])
+            continue;
+
+        printf("%s->%s: (%s, %s)\n", $stop, $to, $profile['departure_start'], $profile['arrival_end']);
+    }
+}
+
+echo PHP_EOL;
+
+echo 'Trips:' . PHP_EOL;
+foreach ($trips as $trip => $eat) {
+    if (PHP_INT_MAX === $eat)
+        continue;
+
+    printf("%s: %s\n", $trip, $eat);
+}
+
+//print_r($profiles);
+//print_r($tripsEA);
+//print_r($tripsExitConn);
 
 
 echo PHP_EOL;
