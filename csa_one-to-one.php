@@ -1,45 +1,31 @@
 <?php
 
-$stops = [
-    1 => 'A',
-    2 => 'B',
-    3 => 'C',
-    4 => 'D',
-    5 => 'E',
-    6 => 'F',
-    7 => 'H',
-    8 => 'I',
-];
+declare(strict_types=1);
 
-$trips = [
-    1 => 'T1',
-    2 => 'T2',
-    3 => 'T3',
-    4 => 'T4',
-    5 => 'T5',
-];
+$stops = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+$trips = ['T1', 'T2', 'T3', 'T4', 'T5'];
 
 $connections = [
     // T1
     [
-        'from' => 'A',
-        'to' => 'B',
+        'from' => 'S1',
+        'to' => 'S2',
         'departure' => 0,
         'arrival' => 10,
         'trip' => 'T1',
         'change_time' => 4,
     ],
     [
-        'from' => 'B',
-        'to' => 'D',
+        'from' => 'S2',
+        'to' => 'S4',
         'departure' => 10,
         'arrival' => 20,
         'trip' => 'T1',
         'change_time' => 4,
     ],
     [
-        'from' => 'D',
-        'to' => 'E',
+        'from' => 'S4',
+        'to' => 'S5',
         'departure' => 20,
         'arrival' => 30,
         'trip' => 'T1',
@@ -47,24 +33,24 @@ $connections = [
     ],
     // T2
     [
-        'from' => 'A',
-        'to' => 'B',
+        'from' => 'S1',
+        'to' => 'S2',
         'departure' => 10,
         'arrival' => 20,
         'trip' => 'T2',
         'change_time' => 4,
     ],
     [
-        'from' => 'B',
-        'to' => 'D',
+        'from' => 'S2',
+        'to' => 'S4',
         'departure' => 20,
         'arrival' => 30,
         'trip' => 'T2',
         'change_time' => 4,
     ],
     [
-        'from' => 'D',
-        'to' => 'E',
+        'from' => 'S4',
+        'to' => 'S5',
         'departure' => 30,
         'arrival' => 47,
         'trip' => 'T2',
@@ -72,16 +58,16 @@ $connections = [
     ],
     // T3
     [
-        'from' => 'B',
-        'to' => 'D',
+        'from' => 'S2',
+        'to' => 'S4',
         'departure' => 25,
         'arrival' => 35,
         'trip' => 'T3',
         'change_time' => 4,
     ],
     [
-        'from' => 'D',
-        'to' => 'E',
+        'from' => 'S4',
+        'to' => 'S5',
         'departure' => 35,
         'arrival' => 45,
         'trip' => 'T3',
@@ -89,16 +75,16 @@ $connections = [
     ],
     // T4
     [
-        'from' => 'B',
-        'to' => 'D',
+        'from' => 'S2',
+        'to' => 'S4',
         'departure' => 25,
         'arrival' => 32,
         'trip' => 'T4',
         'change_time' => 4,
     ],
     [
-        'from' => 'D',
-        'to' => 'E',
+        'from' => 'S4',
+        'to' => 'S5',
         'departure' => 32,
         'arrival' => 38,
         'trip' => 'T4',
@@ -106,16 +92,16 @@ $connections = [
     ],
     // T5
 //    [
-//        'from' => 'H',
-//        'to' => 'E',
+//        'from' => 'S7',
+//        'to' => 'S5',
 //        'departure' => 25,
 //        'arrival' => 35,
 //        'trip' => 'T5',
 //        'change_time' => 4,
 //    ],
 //    [
-//        'from' => 'E',
-//        'to' => 'I',
+//        'from' => 'S5',
+//        'to' => 'S8',
 //        'departure' => 35,
 //        'arrival' => 45,
 //        'trip' => 'T5',
@@ -123,8 +109,8 @@ $connections = [
 //    ],
     // T6
 //    [
-//        'from' => 'B',
-//        'to' => 'E',
+//        'from' => 'S2',
+//        'to' => 'S5',
 //        'departure' => 17,
 //        'arrival' => 50,
 //        'trip' => 'T6',
@@ -132,38 +118,85 @@ $connections = [
 //    ],
 ];
 
+function getConnectionId(int $cId, array $c): string
+{
+    return sprintf('%2d/%s@%2d->%s@%2d', $cId, $c['from'], $c['departure'], $c['to'], $c['arrival']);
+}
+
+function printTrip(string $tripId)
+{
+    global $connections;
+
+    echo $tripId . ': ';
+
+    $prevC = null;
+    foreach ($connections as $cI => $c) {
+        if ($c['trip'] != $tripId) continue;
+
+        if ($prevC != null) {
+            echo str_repeat(' ', $c['departure'] - $prevC['arrival']);
+        } else {
+            if ($c['departure'] != 0) echo str_repeat(' ', 17);
+            echo str_repeat(' ', $c['departure']);
+        }
+
+        printf('%s %s ', getConnectionId($cI, $c), str_repeat('=', $c['arrival'] - $c['departure']));
+
+        $prevC = $c;
+    }
+
+    echo PHP_EOL . PHP_EOL;
+}
+
 // sort by departure
 usort($connections, function ($c1, $c2) {
     return $c1['departure'] - $c2['departure'];
 });
 
+foreach ($trips as $t) {
+    printTrip($t);
+}
 //print_r($connections); die();
 
-$earliestArrival = array_fill_keys(array_values($stops), PHP_INT_MAX);
-$inConnection = array_fill_keys(array_values($stops), null);
-$tripReachability = array_fill_keys(array_values($trips), false);
+$earliestArrival = array_fill_keys($stops, PHP_INT_MAX / 2);
+$inConnection = array_fill_keys($stops, null);
+$tripReachability = array_fill_keys($trips, false);
 
 // input
-$from = 'A';
-$to = 'E';
-$departureTimestamp = 5;
+$from = 'S2';
+$to = 'S5';
+$departureTimestamp = 11;
 
 // --------------------------
 
 $earliestArrival[$from] = $departureTimestamp;
 
 foreach ($connections as $cI => $c) {
-    $changeTime = false === $tripReachability[$c['trip']]
-        ? $c['change_time']
-        : 0;
+    printf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']);
 
-    if ($c['departure'] >= ($earliestArrival[$c['from']] + $changeTime) && $c['arrival'] < $earliestArrival[$c['to']]) {
+    // A connection C is reachable, iff either a passenger:
+    //  a) has already been on another connection of the same trip T
+    //  b) is standing at the C's departure stop on time
+    $isReachable = true === $tripReachability[$c['trip']]
+        || $c['departure'] >= ($earliestArrival[$c['from']] + $c['change_time']);
+
+    // Does using C improve the EAT of C's arrival stop?
+    $improvesArrivalTime = $c['arrival'] < $earliestArrival[$c['to']];
+
+    printf("isReachable = %s, improves = %s\n", var_export($isReachable, true), var_export($improvesArrivalTime, true));
+
+    if ($isReachable && $improvesArrivalTime) {
+        print("Take it [x]\n");
+
         $tripReachability[$c['trip']] = true;
         $earliestArrival[$c['to']] = $c['arrival'];
         $inConnection[$c['to']] = $cI;
     }
+
+    echo PHP_EOL;
 }
 
+echo PHP_EOL;
 //print_r($earliestArrival);
 
 if ($inConnection[$to] === null) {
