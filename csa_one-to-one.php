@@ -158,7 +158,7 @@ foreach ($trips as $t) {
 }
 //print_r($connections); die();
 
-$earliestArrival = array_fill_keys($stops, PHP_INT_MAX / 2);
+$earliestArrival = array_fill_keys($stops, PHP_INT_MAX);
 $inConnection = array_fill_keys($stops, null);
 $tripReachability = array_fill_keys($trips, false);
 
@@ -166,6 +166,8 @@ $tripReachability = array_fill_keys($trips, false);
 $from = 'S2';
 $to = 'S5';
 $departureTimestamp = 11;
+
+printf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp);
 
 // --------------------------
 
