@@ -158,7 +158,7 @@ foreach ($trips as $t) {
 }
 //print_r($connections); die();
 
-$earliestArrival = array_fill_keys($stops, PHP_INT_MAX);
+$earliestArrival = array_fill_keys($stops, INF);
 $inConnection = array_fill_keys($stops, null);
 $tripReachability = array_fill_keys($trips, false);
 
