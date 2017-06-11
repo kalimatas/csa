@@ -2,158 +2,11 @@
 
 declare(strict_types=1);
 
-$stops = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7'];
-$trips = ['T1', 'T2', 'T3', 'T4', 'T5'];
+require_once 'connections/includes.php';
+//require_once 'connections/two_direct.php';
+require_once 'connections/one_ic.php';
 
-$connections = [
-    // T1
-    [
-        'from' => 'S1',
-        'to' => 'S2',
-        'departure' => 0,
-        'arrival' => 10,
-        'trip' => 'T1',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S2',
-        'to' => 'S4',
-        'departure' => 10,
-        'arrival' => 20,
-        'trip' => 'T1',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S4',
-        'to' => 'S5',
-        'departure' => 20,
-        'arrival' => 30,
-        'trip' => 'T1',
-        'change_time' => 4,
-    ],
-    // T2
-    [
-        'from' => 'S1',
-        'to' => 'S2',
-        'departure' => 10,
-        'arrival' => 20,
-        'trip' => 'T2',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S2',
-        'to' => 'S4',
-        'departure' => 20,
-        'arrival' => 30,
-        'trip' => 'T2',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S4',
-        'to' => 'S5',
-        'departure' => 30,
-        'arrival' => 40,
-        'trip' => 'T2',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S5',
-        'to' => 'S7',
-        'departure' => 40,
-        'arrival' => 50,
-        'trip' => 'T2',
-        'change_time' => 4,
-    ],
-    // T3
-    [
-        'from' => 'S4',
-        'to' => 'S5',
-        'departure' => 25,
-        'arrival' => 35,
-        'trip' => 'T3',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S5',
-        'to' => 'S6',
-        'departure' => 35,
-        'arrival' => 45,
-        'trip' => 'T3',
-        'change_time' => 4,
-    ],
-    // T4
-    [
-        'from' => 'S1',
-        'to' => 'S2',
-        'departure' => 30,
-        'arrival' => 40,
-        'trip' => 'T4',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S2',
-        'to' => 'S4',
-        'departure' => 40,
-        'arrival' => 50,
-        'trip' => 'T4',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S4',
-        'to' => 'S5',
-        'departure' => 50,
-        'arrival' => 60,
-        'trip' => 'T4',
-        'change_time' => 4,
-    ],
-    [
-        'from' => 'S5',
-        'to' => 'S7',
-        'departure' => 60,
-        'arrival' => 70,
-        'trip' => 'T4',
-        'change_time' => 4,
-    ],
-    // T5
-    [
-        'from' => 'S6',
-        'to' => 'S7',
-        'departure' => 47,
-        'arrival' => 67,
-        'trip' => 'T5',
-        'change_time' => 4,
-    ],
-];
-
-function getConnectionId(int $cId, array $c): string
-{
-    return sprintf('%2d/%s@%2d->%s@%2d', $cId, $c['from'], $c['departure'], $c['to'], $c['arrival']);
-}
-
-function printTrip(string $tripId)
-{
-    global $connections;
-
-    echo $tripId . ': ';
-
-    $prevC = null;
-    foreach ($connections as $cI => $c) {
-        if ($c['trip'] != $tripId) continue;
-
-        if ($prevC != null) {
-            echo str_repeat(' ', $c['departure'] - $prevC['arrival']);
-        } else {
-            if ($c['departure'] != 0) echo str_repeat(' ', 17);
-            echo str_repeat(' ', $c['departure']);
-        }
-
-        printf('%s %s ', getConnectionId($cI, $c), str_repeat('=', $c['arrival'] - $c['departure']));
-
-        $prevC = $c;
-    }
-
-    echo PHP_EOL . PHP_EOL;
-}
+global $connections, $stops, $trips;
 
 // print the network
 uasort($connections, function ($c1, $c2) {
@@ -185,7 +38,7 @@ $tripsExitConn = array_fill_keys($trips, null);
 
 // input
 $from = 'S1';
-$to = 'S7';
+$to = 'S4';
 $departureTimestamp = -1;
 
 printf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp);
@@ -212,11 +65,10 @@ foreach ($connections as $cI => $c) {
     }
 
     // 2. Change the vehicle. Evaluating the profile of arrival stop.
-    // todo: introduce change time
     /*debug*/ echo PHP_EOL . $c['to'] . ' profiles' . PHP_EOL . print_r($profiles[$c['to']], true);
 
     foreach ($profiles[$c['to']] as $pi => $pr) {
-        if ($c['arrival'] <= $pr['departure_start']) { // todo: <=?
+        if (($c['arrival'] + $c['change_time']) <= $pr['departure_start']) {
             $prevT = $t;
             $t = min($t, $pr['arrival_end']);
 
@@ -247,7 +99,7 @@ foreach ($connections as $cI => $c) {
         $tripsEA[$c['trip']] = $t;
 
         /*debug*/ printf("Set exit C of trip %s to %d\n", $c['trip'], $cI);
-        $tripsExitConn[$c['trip']] = $cI; // todo: enter connection?
+        $tripsExitConn[$c['trip']] = $cI;
     }
 
     // III. ------------------------------------------------------
@@ -258,13 +110,6 @@ foreach ($connections as $cI => $c) {
     if ($t < $profiles[$c['from']][0]['arrival_end']) {
         if ($c['departure'] == $profiles[$c['from']][0]['departure_start']) {
             /*debug*/ printf("Update arrival_end to %d for equal departure_start\n", $t);
-
-//            $profiles[$c['from']][0] = [
-//                'departure_start' => $c['departure'],
-//                'arrival_end' => $t,
-//                'enter_conn' => $cI,
-//                'exit_conn' => $tripsExitConn[$c['trip']],
-//            ];
 
             $profiles[$c['from']][0]['arrival_end'] = $t;
             $profiles[$c['from']][0]['exit_conn'] = $tripsExitConn[$c['trip']];
