@@ -1,12 +1,16 @@
 <?php
 
+// Calculates the Earliest Arrival Time from source stop s, to
+// all other stops, departing after t, i.e. 1 -> N.
+
 declare(strict_types=1);
 
+require_once 'bootstrap.php';
 require_once 'connections/includes.php';
-//require_once 'connections/two_direct.php';
-require_once 'connections/nested_direct.php';
+require_once 'connections/two_direct.php';
+//require_once 'connections/nested_direct.php';
 
-global $connections, $stops, $trips;
+global $l, $connections, $stops, $trips;
 
 // sort by departure
 usort($connections, function ($c1, $c2) {
@@ -16,7 +20,6 @@ usort($connections, function ($c1, $c2) {
 foreach ($trips as $t) {
     printTrip($t);
 }
-//print_r($connections); die();
 
 $earliestArrival = array_fill_keys($stops, INF);
 $inConnection = array_fill_keys($stops, null);
@@ -27,14 +30,19 @@ $from = 'S1';
 $to = 'S4';
 $departureTimestamp = -5;
 
-printf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp);
+$l->debug(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 
 // --------------------------
 
 $earliestArrival[$from] = $departureTimestamp;
 
 foreach ($connections as $cI => $c) {
-    printf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']);
+    $l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
+
+    if ($earliestArrival[$to] <= $c['departure']) {
+        $l->debug(sprintf('S[%s]=%d cannot be improved by %d anymore Stop here.', $to, $earliestArrival[$to], $c['departure']));
+        break;
+    }
 
     // A connection C is reachable, iff either a passenger:
     //  a) has already been on another connection of the same trip T
@@ -45,10 +53,10 @@ foreach ($connections as $cI => $c) {
     // Does using C improve the EAT of C's arrival stop?
     $improvesArrivalTime = $c['arrival'] < $earliestArrival[$c['to']];
 
-    printf("isReachable = %s, improves = %s\n", var_export($isReachable, true), var_export($improvesArrivalTime, true));
+    $l->debug(sprintf("isReachable = %s, improves = %s\n", var_export($isReachable, true), var_export($improvesArrivalTime, true)));
 
     if ($isReachable && $improvesArrivalTime) {
-        print("Take it [x]\n");
+        $l->debug("Take it [x]\n");
 
         $tripReachability[$c['trip']] = true;
         $earliestArrival[$c['to']] = $c['arrival'];
@@ -59,10 +67,9 @@ foreach ($connections as $cI => $c) {
 }
 
 echo PHP_EOL;
-//print_r($earliestArrival);
 
 if ($inConnection[$to] === null) {
-    printf("No path from %s to %s at %s\n", $from, $to, $departureTimestamp);
+    $l->debug(sprintf("No path from %s to %s at %s\n", $from, $to, $departureTimestamp));
     exit();
 }
 
@@ -76,7 +83,7 @@ while ($connectionIndex !== null) {
 }
 
 foreach ($path as $p) {
-    printf("From %s to %s [%d, %d], trip %s\n", $p['from'], $p['to'], $p['departure'], $p['arrival'], $p['trip']);
+    $l->debug(sprintf("From %s to %s [%d, %d], trip %s\n", $p['from'], $p['to'], $p['departure'], $p['arrival'], $p['trip']));
 }
 
 echo PHP_EOL;
