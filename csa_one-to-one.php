@@ -42,8 +42,6 @@ foreach ($connections as $cI => $c) {
     $l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
 
     $earliestArrivalTo = array_key_exists($to, $earliestArrival) ? $earliestArrival[$to] : INF;
-    //$tripReachabilityCon = array_key_exists($c['trip'], $tripReachability) ? $tripReachability[$c['trip']] : null;
-
     if ($earliestArrivalTo <= $c['departure']) {
         $l->info(sprintf('S[%s]=%d cannot be improved by %d anymore Stop here.', $to, $earliestArrivalTo, $c['departure']));
         break;
@@ -94,9 +92,12 @@ while (false !== array_key_exists($to, $journeyPointers)) {
     $to = $enterConnectionDepartureStop;
 }
 
+$duration = 0;
 foreach ($path as $p) {
     $enterCon = $connections[$p[0]];
     $exitCon = $connections[$p[1]];
+
+    $duration += $exitCon['arrival'] - $enterCon['departure'];
 
     $l->info(
         sprintf(
@@ -109,6 +110,10 @@ foreach ($path as $p) {
             $exitCon['trip']
         )
     );
+}
+
+if ($duration > 0) {
+    $l->info(sprintf('Duration: %s', gmdate('H:i:s', $duration)));
 }
 
 $end = microtime(true);
