@@ -22,8 +22,8 @@ foreach ($trips as $t) {
 }
 
 $earliestArrival = array_fill_keys($stops, INF);
-$inConnection = array_fill_keys($stops, null);
-$tripReachability = array_fill_keys($trips, false);
+$tripReachability = array_fill_keys($trips, null);
+$journeyPointers = array_fill_keys($stops, null);
 
 // input
 $from = 'S1';
@@ -47,7 +47,7 @@ foreach ($connections as $cI => $c) {
     // A connection C is reachable, iff either a passenger:
     //  a) has already been on another connection of the same trip T
     //  b) is standing at the C's departure stop on time
-    $isReachable = true === $tripReachability[$c['trip']]
+    $isReachable = null !== $tripReachability[$c['trip']]
         || $c['departure'] >= ($earliestArrival[$c['from']] + $c['change_time']);
 
     // Does using C improve the EAT of C's arrival stop?
@@ -58,9 +58,12 @@ foreach ($connections as $cI => $c) {
     if ($isReachable && $improvesArrivalTime) {
         $l->debug("Take it [x]\n");
 
-        $tripReachability[$c['trip']] = true;
+        if (null === $tripReachability[$c['trip']]) {
+            $tripReachability[$c['trip']] = $cI;
+        }
+
         $earliestArrival[$c['to']] = $c['arrival'];
-        $inConnection[$c['to']] = $cI;
+        $journeyPointers[$c['to']] = [$tripReachability[$c['trip']], $cI];
     }
 
     echo PHP_EOL;
@@ -68,22 +71,31 @@ foreach ($connections as $cI => $c) {
 
 echo PHP_EOL;
 
-if ($inConnection[$to] === null) {
-    $l->debug(sprintf("No path from %s to %s at %s\n", $from, $to, $departureTimestamp));
-    exit();
-}
-
 // Build path
 $path = [];
-$connectionIndex = $inConnection[$to];
-while ($connectionIndex !== null) {
-    $connection = $connections[$connectionIndex];
-    array_unshift($path, $connection);
-    $connectionIndex = $inConnection[$connection['from']];
+while (null !== $journeyPointers[$to]) {
+    array_unshift($path, $journeyPointers[$to]);
+    $enterConnectionId = $journeyPointers[$to][0];
+    $enterConnection = $connections[$enterConnectionId];
+    $enterConnectionDepartureStop = $enterConnection['from'];
+    $to = $enterConnectionDepartureStop;
 }
 
 foreach ($path as $p) {
-    $l->debug(sprintf("From %s to %s [%d, %d], trip %s\n", $p['from'], $p['to'], $p['departure'], $p['arrival'], $p['trip']));
+    $enterCon = $connections[$p[0]];
+    $exitCon = $connections[$p[1]];
+
+    $l->debug(
+        sprintf(
+            "From %s to %s [%d, %d], dep trip %s, arr trip %s\n",
+            $enterCon['from'],
+            $exitCon['to'],
+            $enterCon['departure'],
+            $exitCon['arrival'],
+            $enterCon['trip'],
+            $exitCon['trip']
+        )
+    );
 }
 
 echo PHP_EOL;
