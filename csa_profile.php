@@ -1,14 +1,17 @@
 <?php
 
+// Calculates earliest arrival times from all stops to
+// target stop t in some date range, i.e. N -> 1 at [d1, d2].
+
 declare(strict_types=1);
 
+require_once 'bootstrap.php';
 require_once 'connections/includes.php';
-//require_once 'connections/two_direct.php';
-require_once 'connections/one_ic.php';
+require_once 'connections/two_direct.php';
+//require_once 'connections/one_ic.php';
 
-global $connections, $stops, $trips;
+global $l, $connections, $stops, $trips;
 
-// print the network
 uasort($connections, function ($c1, $c2) {
     return $c1['departure'] - $c2['departure'];
 });
@@ -25,122 +28,107 @@ uasort($connections, function ($c1, $c2) {
 });
 
 // Initial profiles
-$profiles = array_fill_keys($stops, [
-    [
-        'departure_start' => INF,
-        'arrival_end' => INF,
-        'enter_conn' => null,
-        'exit_conn' => null,
-    ],
-]);
-$tripsEA = array_fill_keys($trips, INF);
-$tripsExitConn = array_fill_keys($trips, null);
+//$profiles = array_fill_keys($stops, [
+//    [
+//        'departure_start' => INF,
+//        'arrival_end' => INF,
+//        'enter_conn' => null,
+//        'exit_conn' => null,
+//    ],
+//]);
+//$tripsEA = array_fill_keys($trips, INF);
+//$tripsExitConn = array_fill_keys($trips, null);
+
+$profiles = [];
+$tripsEA = [];
 
 // input
 $from = 'S1';
 $to = 'S4';
 $departureTimestamp = -1;
 
-printf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp);
+$l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
+$start = microtime(true);
 
 // --------------------------
 
+function dominates(array $q, array $p): bool {
+    return ($q[0] < $p[0] && $q[1] <= $p[1]) || ($q[0] <= $p[0] && $q[1] < $p[1]);
+};
+
 foreach ($connections as $cI => $c) {
-    printf("---------------\n");
-    printf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']);
+    $l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
 
     // I. --------------------------------------------------------
     // Find the minimum arrival time among of all values, that
     // this connection can introduce.
 
     $t = INF;
+    $t1 = INF;
+    $t2 = INF;
+    $t3 = INF;
 
     // The options are:
 
-    // 1. Continue on the vehicle from the trip, i.e. remain seated.
-    $t = min($t, $tripsEA[$c['trip']]);
-
-    /*debug*/ if ($t !== INF) {
-        printf("Can remain seated on trip %s, t = %d\n", $c['trip'], $t);
+    // a) Arrive at target stop
+    if ($c['to'] === $to) {
+        $t1 = $c['arrival'];
     }
 
-    // 2. Change the vehicle. Evaluating the profile of arrival stop.
-    /*debug*/ echo PHP_EOL . $c['to'] . ' profiles' . PHP_EOL . print_r($profiles[$c['to']], true);
+    // b) Continue on the vehicle from the trip, i.e. remain seated
+    if (array_key_exists($c['trip'], $tripsEA)) {
+        $t2 = $tripsEA[$c['trip']];
+    }
 
-    foreach ($profiles[$c['to']] as $pi => $pr) {
-        if (($c['arrival'] + $c['change_time']) <= $pr['departure_start']) {
-            $prevT = $t;
-            $t = min($t, $pr['arrival_end']);
-
-            /*debug*/ if ($t !== $prevT) {
-                printf("Evaluated profile of %s. Got better option at profile [%d]. t = %d\n", $c['to'], $pi, $t);
-            }
-
-            break;
+    // c) Arrival time when transferring
+    if (array_key_exists($c['to'], $profiles)) {
+        // earliest pair of arrival stop
+        $ep = current($profiles[$c['to']]);
+        while ($ep[0] < $c['arrival']) {
+            $ep = next($profiles[$c['to']]);
         }
+        $t3 = $ep[1];
     }
 
-    // 3. Arrive at target stop.
-    if ($c['to'] == $to) {
-        $t = min($t, $c['arrival']);
-
-        /*debug*/ if ($t !== INF) {
-            printf("Arrived to destination %s. t = %d\n", $c['to'], $t);
-        }
-    }
+    $t = min($t1, $t2, $t3);
 
     // II. -------------------------------------------------------
-    // Update trip's arrival time. `t` now contains the earliest
-    // arrival time over all journeys starting in c.
+    // Incorporate $t into $tripsEA and $profiles.
 
-    if ($t < $tripsEA[$c['trip']]) {
-        /*debug*/ printf("Update EAT of trip %s. t = %d\n", $c['trip'], $t);
+    $p = [$c['departure'], $t]; // todo: change time?
 
-        $tripsEA[$c['trip']] = $t;
+    // earliest pair of departure stop
+    $q = array_key_exists($c['from'], $profiles) ? $profiles[$c['from']][0] : [INF, INF];
 
-        /*debug*/ printf("Set exit C of trip %s to %d\n", $c['trip'], $cI);
-        $tripsExitConn[$c['trip']] = $cI;
-    }
-
-    // III. ------------------------------------------------------
-    // Update the profile of the current connection's departure stop.
-
-    /*debug*/ echo PHP_EOL . $c['from'] . ' profiles' . PHP_EOL . print_r($profiles[$c['from']], true);
-
-    if ($t < $profiles[$c['from']][0]['arrival_end']) {
-        if ($c['departure'] == $profiles[$c['from']][0]['departure_start']) {
-            /*debug*/ printf("Update arrival_end to %d for equal departure_start\n", $t);
-
-            $profiles[$c['from']][0]['arrival_end'] = $t;
-            $profiles[$c['from']][0]['exit_conn'] = $tripsExitConn[$c['trip']];
+    if (false === dominates($q, $p)) {
+        if ($q[0] !== $p[0]) {
+            if (false === array_key_exists($c['from'], $profiles)) {
+                $profiles[$c['from']][] = $p;
+            } else {
+                array_unshift($profiles[$c['from']], $p);
+            }
         } else {
-            /*debug*/ printf("Prepend new profile with t = %d\n", $t);
-
-            array_unshift(
-                $profiles[$c['from']],
-                [
-                    'departure_start' => $c['departure'],
-                    'arrival_end' => $t,
-                    'enter_conn' => $cI,
-                    'exit_conn' => $tripsExitConn[$c['trip']],
-                ]
-            );
+            $profiles[$c['from']][0] = $p;
         }
-
-        /*debug*/ echo PHP_EOL . $c['from'] . ' profiles' . PHP_EOL . print_r($profiles[$c['from']], true);
     }
 
-    printf("---------------\n");
-    echo PHP_EOL . PHP_EOL;
+    $tripsEA[$c['trip']] = $t;
 }
+
+$l->info('Finished traversing');
+
+echo PHP_EOL;
 
 // ------------------ Results -----------------------
 
-// Do we have results for input?
-// If yes, build route
-echo 'Results for input: ' . (count($profiles[$from]) > 1 ? var_export(true, true) : var_export(false, true)) . PHP_EOL;
-
 print_r($profiles[$from]);
+
+$end = microtime(true);
+echo 'Start: ' . $start . PHP_EOL;
+echo 'End: ' . $end . PHP_EOL;
+echo 'Time: ' . ($end - $start) . PHP_EOL;
+
+exit();
 
 $routes = [];
 foreach ($profiles[$from] as $profileIndex => $profile) {

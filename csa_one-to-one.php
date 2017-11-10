@@ -22,9 +22,9 @@ global $l, $connections, $stops, $trips;
 //    printTrip($t);
 //}
 
-$earliestArrival = [];
-$tripReachability = [];
-$journeyPointers = [];
+$earliestArrival = [];  // earliest arrival for a stop
+$tripReachability = []; // earliest connection to enter a trip
+$journeyPointers = [];  // enter/exit connections for a leg
 
 // input
 $from = '10';
