@@ -27,8 +27,8 @@ $tripReachability = [];
 $journeyPointers = [];
 
 // input
-$from = '1';
-$to = '10';
+$from = '10';
+$to = '11558';
 $departureTimestamp = 1510354800;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
@@ -39,7 +39,7 @@ $start = microtime(true);
 $earliestArrival[$from] = $departureTimestamp;
 
 foreach ($connections as $cI => $c) {
-    $l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
+    //$l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
 
     $earliestArrivalTo = array_key_exists($to, $earliestArrival) ? $earliestArrival[$to] : INF;
     if ($earliestArrivalTo <= $c['departure']) {
@@ -54,7 +54,7 @@ foreach ($connections as $cI => $c) {
     $isReachable = array_key_exists($c['trip'], $tripReachability)
         || $c['departure'] >= ($earliestArrivalConFrom + $c['change_time']);
 
-    $l->debug(sprintf("isReachable = %s\n", var_export($isReachable, true)));
+    //$l->debug(sprintf("isReachable = %s\n", var_export($isReachable, true)));
 
     if ($isReachable) {
         // Does using C improve the EAT of C's arrival stop?
@@ -65,7 +65,7 @@ foreach ($connections as $cI => $c) {
             continue;
         }
 
-        $l->debug(sprintf("improves = %s, Take it [x]\n", var_export($improvesArrivalTime, true)));
+        //$l->debug(sprintf("improves = %s, Take it [x]\n", var_export($improvesArrivalTime, true)));
 
         if (false === array_key_exists($c['trip'], $tripReachability)) {
             $tripReachability[$c['trip']] = $cI;
@@ -101,13 +101,12 @@ foreach ($path as $p) {
 
     $l->info(
         sprintf(
-            "From %s to %s [%d, %d], dep trip %s, arr trip %s\n",
+            "From %s to %s [%d, %d], trip %s\n",
             $enterCon['from'],
             $exitCon['to'],
             $enterCon['departure'],
             $exitCon['arrival'],
-            $enterCon['trip'],
-            $exitCon['trip']
+            $enterCon['trip']
         )
     );
 }
