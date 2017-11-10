@@ -53,4 +53,12 @@ $connections = [
         'trip' => 'T2',
         'change_time' => 4,
     ],
+    [
+        'from' => 'S4',
+        'to' => 'S5',
+        'departure' => 49,
+        'arrival' => 60,
+        'trip' => 'T2',
+        'change_time' => 4,
+    ],
 ];

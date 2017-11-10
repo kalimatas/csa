@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-$file = new SplFileObject('/Users/kalimatas/Downloads/graph_one_to_one.csv', 'r');
+$file = new SplFileObject('/Users/kalimatas/Downloads/graph_profile_desc.csv', 'r');
 $file->setCsvControl(',');
 $file->setFlags(
     SplFileObject::READ_CSV
