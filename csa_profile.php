@@ -204,20 +204,20 @@ foreach ($routes as $route) {
 
         $duration += $exitCon['arrival'] - $enterCon['departure'];
 
-        $l->info(
-            sprintf(
+        //$l->info(
+            printf(
                 "From %s to %s [%s, %s], trip %s\n",
                 $enterCon['from'],
                 $exitCon['to'],
                 date('Y-m-d H:i:s', $enterCon['departure']),
                 date('Y-m-d H:i:s', $exitCon['arrival']),
                 $enterCon['trip']
-            )
-        );
+            );
+        //);
     }
 
     if ($duration > 0) {
-        $l->info(sprintf('Duration: %s', gmdate('H:i:s', $duration)));
+        printf("Duration: %s\n", gmdate('H:i:s', $duration));
     }
 
     echo PHP_EOL;
