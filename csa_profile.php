@@ -90,14 +90,14 @@ foreach ($connections as $cI => $c) {
         // earliest pair of arrival stop
         $ep = current($profiles[$c['to']]);
         while ($ep && $ep[0] < $c['arrival']) {
-            $t3 = $ep[1];
+            $t3 = $ep[1]; // todo: check this assignment
             $ep = next($profiles[$c['to']]);
         }
     }
 
     $t = min($t1, $t2, $t3);
 
-    if ($t === INF) continue;
+    if ($t === INF) continue; // todo: this is not in the algorithm
 
     // II. -------------------------------------------------------
     // Incorporate $t into $tripsEA and $profiles.
