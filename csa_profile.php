@@ -7,50 +7,35 @@ declare(strict_types=1);
 
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
-//require_once 'connections/two_direct.php';
+require_once 'connections/two_direct.php';
 //require_once 'connections/one_ic.php';
-require_once 'connections/graph.php';
+//require_once 'connections/graph.php';
 
 global $l, $connections, $stops, $trips;
 
-//uasort($connections, function ($c1, $c2) {
-//    return $c1['departure'] - $c2['departure'];
-//});
-//
-//foreach ($trips as $t) {
-//    printTrip($t);
-//}
+uasort($connections, function ($c1, $c2) {
+    return $c1['departure'] - $c2['departure'];
+});
+
+foreach ($trips as $t) {
+    printTrip($t);
+}
 
 // --------------------------
 
 // sort by departure desc
-//uasort($connections, function ($c1, $c2) {
-//    return $c2['departure'] - $c1['departure'];
-//});
+uasort($connections, function ($c1, $c2) {
+    return $c2['departure'] - $c1['departure'];
+});
 
 // Initial profiles
-//$profiles = array_fill_keys($stops, [
-//    [
-//        'departure_start' => INF,
-//        'arrival_end' => INF,
-//        'enter_conn' => null,
-//        'exit_conn' => null,
-//    ],
-//]);
-//$tripsEA = array_fill_keys($trips, INF);
-//$tripsExitConn = array_fill_keys($trips, null);
-
-$profiles = [];
-$tripsEA = [];
+$profiles = array_fill_keys($stops, [[INF, INF, null, null]]);
+$tripsEA = array_fill_keys($trips, [INF, null]);
 
 // input
-$from = '1';
-$to = '10';
-$departureTimestamp = 1510354800;
-
-//$from = 'S1';
-//$to = 'S5';
-//$departureTimestamp = -1;
+$from = 'S1';
+$to = 'S5';
+$departureTimestamp = -5;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);
@@ -81,19 +66,11 @@ foreach ($connections as $cI => $c) {
     }
 
     // b) Continue on the vehicle from the trip, i.e. remain seated
-    if (array_key_exists($c['trip'], $tripsEA)) {
-        $t2 = $tripsEA[$c['trip']][0];
-    }
+    $t2 = $tripsEA[$c['trip']][0];
 
     // c) Arrival time when transferring
-    if (array_key_exists($c['to'], $profiles)) {
-        // earliest pair of arrival stop
-        $ep = current($profiles[$c['to']]);
-        while ($ep && $ep[0] < $c['arrival']) {
-            $t3 = $ep[1]; // todo: check this assignment
-            $ep = next($profiles[$c['to']]);
-        }
-    }
+    // arrival time of the earliest pair of arrival stop after $c[arrival]
+    $t3 = firstAfter($profiles, $c['to'], $c['arrival'])[1];
 
     $t = min($t1, $t2, $t3);
 
@@ -102,25 +79,17 @@ foreach ($connections as $cI => $c) {
     // II. -------------------------------------------------------
     // Incorporate $t into $tripsEA and $profiles.
 
-    $existingTripEA = INF;
-    $existingTripExitCon = null;
-    if (array_key_exists($c['trip'], $tripsEA)) {
-        [$existingTripEA, $existingTripExitCon] = $tripsEA[$c['trip']];
-    }
-    $tripsEA[$c['trip']] = [$t, $t < $existingTripEA ? $cI : $existingTripExitCon];
+    [$currentTripEA, $currentTripExitCon] = $tripsEA[$c['trip']];
+    $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? $cI : $currentTripExitCon];
 
     $p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]]; // todo: change time?
 
     // earliest pair of departure stop
-    $q = array_key_exists($c['from'], $profiles) ? $profiles[$c['from']][0] : [INF, INF];
+    $q = $profiles[$c['from']][0];
 
     if (false === dominates($q, $p)) {
         if ($q[0] !== $p[0]) {
-            if (false === array_key_exists($c['from'], $profiles)) {
-                $profiles[$c['from']][] = $p;
-            } else {
-                array_unshift($profiles[$c['from']], $p);
-            }
+            array_unshift($profiles[$c['from']], $p);
         } else {
             $profiles[$c['from']][0] = $p;
         }
@@ -135,20 +104,6 @@ echo PHP_EOL;
 
 //print_r($profiles);
 
-function firstAfter($s, int $t): ?array
-{
-    global $profiles;
-
-    if (false === array_key_exists($s, $profiles)) return null;
-
-    $p = current($profiles[$s]);
-    while ($p[0] < $t) {
-        $p = next($profiles[$s]);
-    }
-
-    return $p;
-}
-
 if (false === array_key_exists($from, $profiles)) {
     $l->info('No trips found!');
     exit();
@@ -159,6 +114,8 @@ if (false === array_key_exists($from, $profiles)) {
 $routes = [];
 
 foreach ($profiles[$from] as $profile) {
+    if (INF === $profile[0]) continue;
+
     $route = [];
 
     $pExitCon = $connections[$profile[3]];
@@ -173,11 +130,11 @@ foreach ($profiles[$from] as $profile) {
     }
 
     // skip IC for now
-    continue;
+//    continue;
 
     // IC
     while (true) {
-        $p = firstAfter($pExitCon['to'], $pExitCon['arrival']);
+        $p = firstAfter($profiles, $pExitCon['to'], $pExitCon['arrival']);
 
         $pExitCon = $connections[$p[3]];
 
@@ -204,20 +161,22 @@ foreach ($routes as $route) {
 
         $duration += $exitCon['arrival'] - $enterCon['departure'];
 
-        //$l->info(
-            printf(
+        $l->info(
+            sprintf(
                 "From %s to %s [%s, %s], trip %s\n",
                 $enterCon['from'],
                 $exitCon['to'],
-                date('Y-m-d H:i:s', $enterCon['departure']),
-                date('Y-m-d H:i:s', $exitCon['arrival']),
+//                date('Y-m-d H:i:s', $enterCon['departure']),
+                $enterCon['departure'],
+//                date('Y-m-d H:i:s', $exitCon['arrival']),
+                $exitCon['arrival'],
                 $enterCon['trip']
-            );
-        //);
+            )
+        );
     }
 
     if ($duration > 0) {
-        printf("Duration: %s\n", gmdate('H:i:s', $duration));
+        $l->info(sprintf("Duration: %s\n", gmdate('H:i:s', $duration)));
     }
 
     echo PHP_EOL;

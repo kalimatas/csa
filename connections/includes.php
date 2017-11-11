@@ -31,3 +31,22 @@ function printTrip($tripId)
 
     echo PHP_EOL . PHP_EOL;
 }
+
+function firstAfter(array &$profiles, $s, int $t): array
+{
+    $defaultReturn = [INF, INF, null, null];
+
+    if (false === isset($profiles[$s])) {
+        return $defaultReturn;
+    }
+
+    $ret = $defaultReturn;
+    foreach($profiles[$s] as $p) {
+        if ($p[0] > $t) {
+            $ret = $p;
+            break;
+        }
+    }
+
+    return $ret;
+}
