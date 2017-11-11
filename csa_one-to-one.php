@@ -7,29 +7,29 @@ declare(strict_types=1);
 
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
-//require_once 'connections/two_direct.php';
-require_once 'connections/graph.php';
+require_once 'connections/two_direct.php';
+//require_once 'connections/graph.php';
 //require_once 'connections/nested_direct.php';
 
 global $l, $connections, $stops, $trips;
 
 // sort by departure
-//usort($connections, function ($c1, $c2) {
-//    return $c1['departure'] - $c2['departure'];
-//});
+usort($connections, function ($c1, $c2) {
+    return $c1['departure'] - $c2['departure'];
+});
 
-//foreach ($trips as $t) {
-//    printTrip($t);
-//}
+foreach ($trips as $t) {
+    printTrip($t);
+}
 
-$earliestArrival = [];  // earliest arrival for a stop
-$tripReachability = []; // earliest connection to enter a trip
-$journeyPointers = [];  // enter/exit connections for a leg
+$earliestArrival = array_fill_keys($stops, INF); // earliest arrival for a stop
+$tripReachability = array_fill_keys($trips, null); // earliest connection to enter a trip
+$journeyPointers = []; // enter/exit connections for a leg
 
 // input
-$from = '10';
-$to = '11558';
-$departureTimestamp = 1510354800;
+$from = 'S1';
+$to = 'S5';
+$departureTimestamp = -5;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);
@@ -41,25 +41,22 @@ $earliestArrival[$from] = $departureTimestamp;
 foreach ($connections as $cI => $c) {
     //$l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
 
-    $earliestArrivalTo = array_key_exists($to, $earliestArrival) ? $earliestArrival[$to] : INF;
-    if ($earliestArrivalTo <= $c['departure']) {
-        $l->info(sprintf('S[%s]=%d cannot be improved by %d anymore Stop here.', $to, $earliestArrivalTo, $c['departure']));
+    if ($earliestArrival[$to] <= $c['departure']) {
+        //$l->debug(sprintf('S[%s]=%d cannot be improved by %d anymore Stop here.', $to, $earliestArrival[$to], $c['departure']));
         break;
     }
 
     // A connection C is reachable, iff either a passenger:
     //  a) has already been on another connection of the same trip T
     //  b) is standing at the C's departure stop on time
-    $earliestArrivalConFrom = array_key_exists($c['from'], $earliestArrival) ? $earliestArrival[$c['from']] : INF;
-    $isReachable = array_key_exists($c['trip'], $tripReachability)
-        || $c['departure'] >= ($earliestArrivalConFrom + $c['change_time']);
+    $isReachable = null !== $tripReachability[$c['trip']]
+        || $c['departure'] >= ($earliestArrival[$c['from']] + $c['change_time']);
 
     //$l->debug(sprintf("isReachable = %s\n", var_export($isReachable, true)));
 
     if ($isReachable) {
         // Does using C improve the EAT of C's arrival stop?
-        $earliestArrivalConTo = array_key_exists($c['to'], $earliestArrival) ? $earliestArrival[$c['to']] : INF;
-        $improvesArrivalTime = $c['arrival'] < $earliestArrivalConTo;
+        $improvesArrivalTime = $c['arrival'] < $earliestArrival[$c['to']];
 
         if (false === $improvesArrivalTime) {
             continue;
@@ -67,7 +64,7 @@ foreach ($connections as $cI => $c) {
 
         //$l->debug(sprintf("improves = %s, Take it [x]\n", var_export($improvesArrivalTime, true)));
 
-        if (false === array_key_exists($c['trip'], $tripReachability)) {
+        if (null === $tripReachability[$c['trip']]) {
             $tripReachability[$c['trip']] = $cI;
         }
 

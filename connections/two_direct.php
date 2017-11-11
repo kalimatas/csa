@@ -62,3 +62,14 @@ $connections = [
         'change_time' => 4,
     ],
 ];
+
+$stops = [];
+$trips = [];
+foreach ($connections as $c) {
+    $stops[$c['from']] = true;
+    $stops[$c['to']] = true;
+    $trips[$c['trip']] = true;
+}
+
+$stops = array_keys($stops);
+$trips = array_keys($trips);
