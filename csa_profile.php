@@ -74,7 +74,7 @@ foreach ($connections as $cI => $c) {
 
     $t = min($t1, $t2, $t3);
 
-    if ($t === INF) continue; // todo: this is not in the algorithm
+    if (INF === $t) continue; // todo: this is not in the algorithm
 
     // II. -------------------------------------------------------
     // Incorporate $t into $tripsEA and $profiles.
@@ -112,46 +112,24 @@ if (false === array_key_exists($from, $profiles)) {
 //var_dump($profiles[$from]);
 
 $routes = [];
-
 foreach ($profiles[$from] as $profile) {
     if (INF === $profile[0]) continue;
 
     // 04:00 next day
-    if ($profile[0] > 1510459200) {
-        continue;
-    }
+    if ($profile[0] > 1510459200) continue;
 
+    // each profile entry is a start (and an end in case of direct) of a route
     $route = [];
-
-    $pExitCon = $connections[$profile[3]];
-
-    $leg = [$profile[2], $profile[3]];
-    $route[] = $leg;
-
-    // direct
-    if ($pExitCon['to'] === $to) {
-        $routes[] = $route;
-        continue;
-    }
-
-    // skip IC for now
-//    continue;
-
-    // IC
-    while (true) {
-        $p = firstAfter($profiles, $pExitCon['to'], $pExitCon['arrival']);
-
-        $pExitCon = $connections[$p[3]];
-
-        $leg = [$p[2], $p[3]];
+    $p = $profile;
+    do {
+        $leg = [$p[2], $p[3]]; // enter/exit connections form a leg
         $route[] = $leg;
 
-        // reached target
-        if ($pExitCon['to'] === $to) {
-            $routes[] = $route;
-            break;
-        }
-    }
+        $pExitCon = $connections[$p[3]];
+        $p = firstAfter($profiles, $pExitCon['to'], $pExitCon['arrival']);
+    } while ($pExitCon['to'] !== $to);
+
+    $routes[] = $route;
 }
 
 $end = microtime(true);
