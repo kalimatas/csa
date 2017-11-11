@@ -14,6 +14,8 @@ $file->setFlags(
 $header = $file->fgetcsv();
 
 $connections = [];
+$stops = [];
+$trips = [];
 foreach (new \LimitIterator($file, 1) as $rawRecord) {
     $connection = array_combine($header, $rawRecord);
     $connections[] = [
@@ -24,4 +26,11 @@ foreach (new \LimitIterator($file, 1) as $rawRecord) {
         'trip' => $connection['trip'],
         'change_time' => $connection['change_time'],
     ];
+
+    $stops[$connection['from']] = true;
+    $stops[$connection['to']] = true;
+    $trips[$connection['trip']] = true;
 }
+
+$stops = array_keys($stops);
+$trips = array_keys($trips);
