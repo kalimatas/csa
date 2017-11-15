@@ -8,34 +8,32 @@ declare(strict_types=1);
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
 //require_once 'connections/two_direct.php';
-//require_once 'connections/one_ic.php';
-require_once 'connections/graph.php';
+require_once 'connections/two_ic.php';
+//require_once 'connections/graph.php';
 
 global $l, $connections, $stops, $trips;
 
-//uasort($connections, function ($c1, $c2) {
-//    return $c1['departure'] - $c2['departure'];
-//});
-//
-//foreach ($trips as $t) {
-//    printTrip($t);
-//}
+uasort($connections, function ($c1, $c2) {
+    return $c1['departure'] - $c2['departure'];
+});
 
-// --------------------------
+foreach ($trips as $t) {
+    printTrip($t);
+}
 
 // sort by departure desc
-//uasort($connections, function ($c1, $c2) {
-//    return $c2['departure'] - $c1['departure'];
-//});
+uasort($connections, function ($c1, $c2) {
+    return $c2['departure'] - $c1['departure'];
+});
 
 // Initial profiles
 $profiles = array_fill_keys($stops, [[INF, INF, null, null]]);
 $tripsEA = array_fill_keys($trips, [INF, null]);
 
 // input
-$from = '1';
-$to = '30';
-$departureTimestamp = 1510354800;
+$from = 'S1';
+$to = 'S6';
+$departureTimestamp = -1;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);
@@ -151,10 +149,10 @@ foreach ($routes as $routeIndex => $route) {
                 "From %s to %s [%s, %s], trip %s\n",
                 $enterCon['from'],
                 $exitCon['to'],
-                date('Y-m-d H:i:s', $enterCon['departure']),
-//                $enterCon['departure'],
-                date('Y-m-d H:i:s', $exitCon['arrival']),
-//                $exitCon['arrival'],
+                //date('Y-m-d H:i:s', $enterCon['departure']),
+                $enterCon['departure'],
+                //date('Y-m-d H:i:s', $exitCon['arrival']),
+                $exitCon['arrival'],
                 $enterCon['trip']
             )
         );
