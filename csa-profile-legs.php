@@ -8,7 +8,8 @@ declare(strict_types=1);
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
 //require_once 'connections/two_direct.php';
-require_once 'connections/two_ic.php';
+//require_once 'connections/two_ic.php';
+require_once 'connections/example_from_paper.php';
 //require_once 'connections/graph.php';
 
 global $l, $connections, $stops, $trips;
@@ -31,9 +32,9 @@ $profiles = array_fill_keys($stops, [[INF, INF, null, null]]);
 $tripsEA = array_fill_keys($trips, [INF, null]);
 
 // input
-$from = 'S1';
-$to = 'S6';
-$departureTimestamp = -1;
+$from = 'S';
+$to = 'T';
+$departureTimestamp = 3;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);
@@ -45,7 +46,7 @@ function dominates(array $q, array $p): bool {
 };
 
 foreach ($connections as $cI => $c) {
-    //$l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
+    $l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
 
     // I. --------------------------------------------------------
     // Find the minimum arrival time among of all values, that
@@ -114,7 +115,7 @@ foreach ($profiles[$from] as $profile) {
     if (INF === $profile[0]) continue;
 
     // 04:00 next day
-    if ($profile[0] > 1510459200) continue;
+    //if ($profile[0] > 1510459200) continue;
 
     // each profile entry is a start (and an end in case of direct) of a route
     $route = [];

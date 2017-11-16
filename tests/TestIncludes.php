@@ -89,4 +89,33 @@ class TestIncludes extends TestCase
             [11, 21, 3, 4]
         ];
     }
+
+    /**
+     * @dataProvider minVectorProvider
+     */
+    public function testMinVector(array $a, array $b, array $expected)
+    {
+        $this->assertEquals($expected, minVector($a, $b));
+    }
+
+    public function minVectorProvider(): \Generator
+    {
+        yield [
+            'a' => [1],
+            'b' => [2],
+            'expected' => [1]
+        ];
+
+        yield [
+            'a' => [1, 1],
+            'b' => [2, 3],
+            'expected' => [1, 1]
+        ];
+
+        yield [
+            'a' => [2, 1],
+            'b' => [1, 3],
+            'expected' => [1, 1]
+        ];
+    }
 }

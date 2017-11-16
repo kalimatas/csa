@@ -32,16 +32,14 @@ function printTrip($tripId)
     echo PHP_EOL . PHP_EOL;
 }
 
-function firstAfter(array &$profiles, $s, int $t): array
+function f(array &$profiles, $s, int $t, array $defaultReturn): array
 {
-    $defaultReturn = [INF, INF, null, null];
-
     if (false === isset($profiles[$s])) {
         return $defaultReturn;
     }
 
     $ret = $defaultReturn;
-    foreach($profiles[$s] as $p) {
+    foreach ($profiles[$s] as $p) {
         if ($p[0] > $t) {
             $ret = $p;
             break;
@@ -49,6 +47,29 @@ function firstAfter(array &$profiles, $s, int $t): array
     }
 
     return $ret;
+}
+
+function firstAfter(array &$profiles, $s, int $t): array
+{
+    return f($profiles, $s, $t, [INF, INF, null, null]);
+}
+
+function firstAfterVector(array &$profiles, $s, int $t): array
+{
+    return f($profiles, $s, $t, [INF, [INF, INF, INF], null, null]);
+}
+
+// component wise minimum
+function minVector(array $a, array $b): array
+{
+    assert(count($a) === count($b), 'not equally sized vectors');
+
+    $r = [];
+    for ($i = 0, $c = count($a); $i < $c; $i++) {
+        $r[$i] = min($a[$i], $b[$i]);
+    }
+
+    return $r;
 }
 
 function secondsToTime($seconds): string
