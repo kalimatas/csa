@@ -40,10 +40,6 @@ $start = microtime(true);
 
 // --------------------------
 
-function dominates(array $q, array $p): bool {
-    return ($q[0] < $p[0] && $q[1] <= $p[1]) || ($q[0] <= $p[0] && $q[1] < $p[1]);
-};
-
 foreach ($connections as $cI => $c) {
     //$l->debug(sprintf("Inspecting C %s on %s\n", getConnectionId($cI, $c), $c['trip']));
 
@@ -85,7 +81,7 @@ foreach ($connections as $cI => $c) {
     // earliest pair of departure stop
     $q = $profiles[$c['from']][0];
 
-    if (false === dominates($q, $p)) {
+    if (false === dominatesVector($q, $p)) {
         if ($q[0] !== $p[0]) {
             array_unshift($profiles[$c['from']], $p);
         } else {

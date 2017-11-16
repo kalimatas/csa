@@ -118,4 +118,92 @@ class TestIncludes extends TestCase
             'expected' => [1, 1]
         ];
     }
+
+    /**
+     * @dataProvider equalVectorsProvider
+     */
+    public function testEqualVectors(array $a, array $b, bool $expected)
+    {
+        $this->assertEquals($expected, equalVectors($a, $b));
+    }
+
+    public function equalVectorsProvider(): \Generator
+    {
+        yield [
+            'a' => [1],
+            'b' => [1],
+            'expected' => true
+        ];
+
+        yield [
+            'a' => [1],
+            'b' => [2],
+            'expected' => false
+        ];
+
+        yield [
+            'a' => [1, 1],
+            'b' => [2, 1],
+            'expected' => false
+        ];
+
+        yield [
+            'a' => [2, 2],
+            'b' => [2, 2],
+            'expected' => true
+        ];
+    }
+
+    /**
+     * @dataProvider dominatesVectorsProvider
+     */
+    public function testDominatesVector(array $a, array $b, bool $expected)
+    {
+        $this->assertEquals($expected, dominatesVector($a, $b));
+    }
+
+    public function dominatesVectorsProvider(): \Generator
+    {
+        yield [
+            'a' => [1],
+            'b' => [1],
+            'expected' => false
+        ];
+
+        yield [
+            'a' => [1],
+            'b' => [2],
+            'expected' => true
+        ];
+
+        yield [
+            'a' => [2],
+            'b' => [1],
+            'expected' => false
+        ];
+
+        yield [
+            'a' => [1, 1],
+            'b' => [2, 1],
+            'expected' => true
+        ];
+
+        yield [
+            'a' => [2, 1],
+            'b' => [1, 1],
+            'expected' => false
+        ];
+
+        yield [
+            'a' => [1, 2],
+            'b' => [2, 1],
+            'expected' => false
+        ];
+
+        yield [
+            'a' => [2, 2],
+            'b' => [2, 2],
+            'expected' => false
+        ];
+    }
 }
