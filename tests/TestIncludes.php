@@ -206,4 +206,25 @@ class TestIncludes extends TestCase
             'expected' => false
         ];
     }
+
+    /**
+     * @dataProvider shiftVectorRightProvider
+     */
+    public function testShiftVectorRight(array $a, array $expected)
+    {
+        $this->assertEquals($expected, shiftVectorRight($a));
+    }
+
+    public function shiftVectorRightProvider(): \Generator
+    {
+        yield [
+            'a' => [1, 1, 1],
+            'expected' => [INF, 1, 1],
+        ];
+
+        yield [
+            'a' => [1, 2, 3],
+            'expected' => [INF, 1, 2],
+        ];
+    }
 }

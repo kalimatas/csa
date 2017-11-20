@@ -100,3 +100,13 @@ function dominatesVector(array $q, array $p): bool
 
     return equalVectors($q, minVector($q, $p));
 }
+
+function shiftVectorRight(array $v): array
+{
+    assert(count($v) === 3);
+
+    array_pop($v);
+    array_unshift($v, INF);
+
+    return $v;
+}
