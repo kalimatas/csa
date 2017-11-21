@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
 require_once 'connections/two_direct.php';
+//require_once 'connections/one_departure_direct_ic.php';
 //require_once 'connections/one_ic.php';
 //require_once 'connections/graph.php';
 
@@ -81,7 +82,7 @@ foreach ($connections as $cI => $c) {
     // earliest pair of departure stop
     $q = $profiles[$c['from']][0];
 
-    if (false === dominatesVector($q, $p)) {
+    if (false === dominates($q, $p)) {
         if ($q[0] !== $p[0]) {
             array_unshift($profiles[$c['from']], $p);
         } else {

@@ -88,6 +88,11 @@ function secondsToTime($seconds): string
     return $dtF->diff($dtT)->format('%a days, %h hours, %i minutes and %s seconds');
 }
 
+function dominates(array $q, array $p): bool
+{
+    return ($q[0] < $p[0] && $q[1] <= $p[1]) || ($q[0] <= $p[0] && $q[1] < $p[1]);
+}
+
 function dominatesVector(array $q, array $p): bool
 {
     if (equalVectors($q, $p)) {
