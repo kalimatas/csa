@@ -64,6 +64,10 @@ function minVector(array $a, array $b): array
 {
     assert(count($a) === count($b), 'not equally sized vectors');
 
+    if ($a == $b) {
+        return $a;
+    }
+
     $r = [];
     for ($i = 0, $c = count($a); $i < $c; $i++) {
         $r[$i] = min($a[$i], $b[$i]);

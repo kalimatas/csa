@@ -11,6 +11,7 @@ require_once 'connections/includes.php';
 //require_once 'connections/two_direct.php';
 //require_once 'connections/two_ic.php';
 require_once 'connections/example_from_paper.php';
+//require_once 'connections/one_departure_direct_ic.php';
 //require_once 'connections/graph.php';
 
 global $l, $connections, $stops, $trips;
@@ -70,7 +71,7 @@ foreach ($connections as $cI => $c) {
 
     $t = minVector(minVector($t1, $t2), $t3);
 
-    if ([INF, INF, INF] === $t) continue; // todo: this is not in the algorithm
+    if ([INF, INF, INF] == $t) continue; // todo: this is not in the algorithm
 
     // II. -------------------------------------------------------
     // Incorporate $t into $tripsEA and $profiles.
@@ -81,12 +82,11 @@ foreach ($connections as $cI => $c) {
 //    $p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]]; // todo: change time? check enter/exit conn
 
     // earliest pair of departure stop
-    $q = $profiles[$c['from']][0];
-    $qT = $q[1];
+    $q = $profiles[$c['from']][0][1];
 
-//    if (false === equalVectors($qT, minVector($qT, $t))) {
-    if (false === dominatesVector($qT, $t)) {
-        array_unshift($profiles[$c['from']], [$c['departure'], minVector($qT, $t)]);
+    $x = minVector($q, $t);
+    if (false === equalVectors($q, $x)) {
+        array_unshift($profiles[$c['from']], [$c['departure'], $x]);
     }
 }
 
