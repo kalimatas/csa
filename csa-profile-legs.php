@@ -49,16 +49,16 @@ foreach ($connections as $cI => $c) {
     // Find the minimum arrival time among of all values, that
     // this connection can introduce.
 
-    $t = INF;
-    $t1 = INF;
-    $t2 = INF;
-    $t3 = INF;
+    $t = [INF, INF, INF];
+    $t1 = [INF, INF, INF];
+    $t2 = [INF, INF, INF];
+    $t3 = [INF, INF, INF];
 
     // The options are:
 
     // a) Arrive at target stop
     if ($c['to'] === $to) {
-        $t1 = $c['arrival'];
+        $t1 = [$c['arrival'], $c['arrival'], $c['arrival']];
     }
 
     // b) Continue on the vehicle from the trip, i.e. remain seated
@@ -66,29 +66,27 @@ foreach ($connections as $cI => $c) {
 
     // c) Arrival time when transferring
     // arrival time of the earliest pair of arrival stop after $c[arrival]
-    $t3 = firstAfter($profiles, $c['to'], $c['arrival'])[1];
+    $t3 = shiftVectorRight(firstAfterVector($profiles, $c['to'], $c['arrival'])[1]);
 
-    $t = min($t1, $t2, $t3);
+    $t = minVector(minVector($t1, $t2), $t3);
 
-    if (INF === $t) continue; // todo: this is not in the algorithm
+    if ([INF, INF, INF] === $t) continue; // todo: this is not in the algorithm
 
     // II. -------------------------------------------------------
     // Incorporate $t into $tripsEA and $profiles.
 
     [$currentTripEA, $currentTripExitCon] = $tripsEA[$c['trip']];
-    $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? $cI : $currentTripExitCon];
+    $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? $cI : $currentTripExitCon]; // todo: check exit conn
 
-    $p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]]; // todo: change time?
+//    $p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]]; // todo: change time? check enter/exit conn
 
     // earliest pair of departure stop
     $q = $profiles[$c['from']][0];
+    $qT = $q[1];
 
-    if (false === dominatesVector($q, $p)) {
-        if ($q[0] !== $p[0]) {
-            array_unshift($profiles[$c['from']], $p);
-        } else {
-            $profiles[$c['from']][0] = $p;
-        }
+//    if (false === equalVectors($qT, minVector($qT, $t))) {
+    if (false === dominatesVector($qT, $t)) {
+        array_unshift($profiles[$c['from']], [$c['departure'], minVector($qT, $t)]);
     }
 }
 

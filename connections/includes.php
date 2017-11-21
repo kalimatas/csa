@@ -74,15 +74,7 @@ function minVector(array $a, array $b): array
 
 function equalVectors(array $a, array $b): bool
 {
-    assert(count($a) === count($b), 'not equally sized vectors');
-
-    for ($i = 0, $c = count($a); $i < $c; $i++) {
-        if ($a[$i] !== $b[$i]) {
-            return false;
-        }
-    }
-
-    return true;
+    return $a == $b;
 }
 
 function secondsToTime($seconds): string

@@ -205,6 +205,12 @@ class TestIncludes extends TestCase
             'b' => [2, 2],
             'expected' => false
         ];
+
+        yield [
+            'a' => [INF, 2],
+            'b' => [3, 3],
+            'expected' => true
+        ];
     }
 
     /**
