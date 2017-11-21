@@ -35,6 +35,22 @@ $connections = [
         'trip' => 'T2',
         'change_time' => 0,
     ],
+    [
+        'from' => 'S',
+        'to' => 'Z',
+        'departure' => 6,
+        'arrival' => 9,
+        'trip' => 'T3',
+        'change_time' => 0,
+    ],
+    [
+        'from' => 'Z',
+        'to' => 'T',
+        'departure' => 10,
+        'arrival' => 14,
+        'trip' => 'T3',
+        'change_time' => 0,
+    ],
 ];
 
 $stops = [];
