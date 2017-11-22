@@ -9,8 +9,8 @@ declare(strict_types=1);
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
 //require_once 'connections/two_direct.php';
-//require_once 'connections/two_ic.php';
-require_once 'connections/example_from_paper.php';
+require_once 'connections/two_ic.php';
+//require_once 'connections/example_from_paper.php';
 //require_once 'connections/one_departure_direct_ic.php';
 //require_once 'connections/graph.php';
 
@@ -30,13 +30,13 @@ uasort($connections, function ($c1, $c2) {
 });
 
 // Initial profiles
-$profiles = array_fill_keys($stops, [[INF, [INF, INF, INF], null, null]]);
-$tripsEA = array_fill_keys($trips, [[INF, INF, INF], null]);
+$profiles = array_fill_keys($stops, [[INF, [INF, INF, INF], [null, null, null], [null, null, null]]]);
+$tripsEA = array_fill_keys($trips, [[INF, INF, INF], [null, null, null]]);
 
 // input
-$from = 'S';
-$to = 'T';
-$departureTimestamp = 3;
+$from = 'S1';
+$to = 'S6';
+$departureTimestamp = -1;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);
@@ -76,17 +76,16 @@ foreach ($connections as $cI => $c) {
     // II. -------------------------------------------------------
     // Incorporate $t into $tripsEA and $profiles.
 
-    [$currentTripEA, $currentTripExitCon] = $tripsEA[$c['trip']];
-    $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? $cI : $currentTripExitCon]; // todo: check exit conn
-
-//    $p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]]; // todo: change time? check enter/exit conn
+    [$currentTripEA, $currentTripExitCons] = $tripsEA[$c['trip']];
+    $isMin = $t < $currentTripEA;
+    $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? [$cI, $cI, $cI] : $currentTripExitCons]; // todo: check exit conn
 
     // earliest pair of departure stop
     $q = $profiles[$c['from']][0][1];
 
     $x = minVector($q, $t);
     if (false === equalVectors($q, $x)) {
-        array_unshift($profiles[$c['from']], [$c['departure'], $x]);
+        array_unshift($profiles[$c['from']], [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]);
     }
 }
 
@@ -96,16 +95,12 @@ echo PHP_EOL;
 
 // ------------------ Results -----------------------
 
-exit('Results are skipped');
+//exit('Results are skipped');
 
-//print_r($profiles);
-
-if (false === array_key_exists($from, $profiles)) {
-    $l->info('No trips found!');
-    exit();
-}
-
-//var_dump($profiles[$from]);
+var_dump($profiles);
+echo 'From: ' . PHP_EOL;
+var_dump($profiles[$from]);
+exit();
 
 $routes = [];
 foreach ($profiles[$from] as $profile) {

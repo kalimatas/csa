@@ -7,7 +7,8 @@ declare(strict_types=1);
 
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
-require_once 'connections/two_direct.php';
+//require_once 'connections/two_direct.php';
+require_once 'connections/two_ic.php';
 //require_once 'connections/one_departure_direct_ic.php';
 //require_once 'connections/one_ic.php';
 //require_once 'connections/graph.php';
@@ -33,7 +34,7 @@ $tripsEA = array_fill_keys($trips, [INF, null]);
 
 // input
 $from = 'S1';
-$to = 'S5';
+$to = 'S6';
 $departureTimestamp = -1;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
