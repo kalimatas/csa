@@ -9,8 +9,8 @@ declare(strict_types=1);
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
 //require_once 'connections/two_direct.php';
-require_once 'connections/two_ic.php';
-//require_once 'connections/example_from_paper.php';
+//require_once 'connections/two_ic.php';
+require_once 'connections/example_from_paper.php';
 //require_once 'connections/one_departure_direct_ic.php';
 //require_once 'connections/graph.php';
 
@@ -34,9 +34,9 @@ $profiles = array_fill_keys($stops, [[INF, [INF, INF, INF], [null, null, null], 
 $tripsEA = array_fill_keys($trips, [[INF, INF, INF], [null, null, null]]);
 
 // input
-$from = 'S1';
-$to = 'S6';
-$departureTimestamp = -1;
+$from = 'S';
+$to = 'T';
+$departureTimestamp = 4;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);
@@ -97,9 +97,9 @@ echo PHP_EOL;
 
 //exit('Results are skipped');
 
-var_dump($profiles);
+print_r($profiles);
 echo 'From: ' . PHP_EOL;
-var_dump($profiles[$from]);
+print_r($profiles[$from]);
 exit();
 
 $routes = [];

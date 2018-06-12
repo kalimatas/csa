@@ -7,17 +7,18 @@ declare(strict_types=1);
 
 require_once 'bootstrap.php';
 require_once 'connections/includes.php';
+require_once 'connections/example_from_paper.php';
 //require_once 'connections/two_direct.php';
-require_once 'connections/two_ic.php';
+//require_once 'connections/two_ic.php';
 //require_once 'connections/one_departure_direct_ic.php';
 //require_once 'connections/one_ic.php';
 //require_once 'connections/graph.php';
 
 global $l, $connections, $stops, $trips;
 
-uasort($connections, function ($c1, $c2) {
-    return $c1['departure'] - $c2['departure'];
-});
+//uasort($connections, function ($c1, $c2) {
+//    return $c1['departure'] - $c2['departure'];
+//});
 
 foreach ($trips as $t) {
     printTrip($t);
@@ -28,13 +29,16 @@ uasort($connections, function ($c1, $c2) {
     return $c2['departure'] - $c1['departure'];
 });
 
-// Initial profiles
+                                    // |--- departure time
+                                    // |    | --- arrival time
+// Initial profiles                 // |    |    | --- enter connection
+                                    // |    |    |     |--- exit connection
 $profiles = array_fill_keys($stops, [[INF, INF, null, null]]);
 $tripsEA = array_fill_keys($trips, [INF, null]);
 
 // input
-$from = 'S1';
-$to = 'S6';
+$from = 'S';
+$to = 'T';
 $departureTimestamp = -1;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
@@ -112,7 +116,7 @@ foreach ($profiles[$from] as $profile) {
     if (INF === $profile[0]) continue;
 
     // 04:00 next day
-    if ($profile[0] > 1510459200) continue;
+    //if ($profile[0] > 1510459200) continue;
 
     // each profile entry is a start (and an end in case of direct) of a route
     $route = [];
