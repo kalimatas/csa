@@ -16,13 +16,13 @@ require_once 'connections/example_from_paper.php';
 
 global $l, $connections, $stops, $trips;
 
-uasort($connections, function ($c1, $c2) {
-    return $c1['departure'] - $c2['departure'];
-});
-
-foreach ($trips as $t) {
-    printTrip($t);
-}
+//uasort($connections, function ($c1, $c2) {
+//    return $c1['departure'] - $c2['departure'];
+//});
+//
+//foreach ($trips as $t) {
+//    printTrip($t);
+//}
 
 // sort by departure desc
 uasort($connections, function ($c1, $c2) {
@@ -36,7 +36,7 @@ $tripsEA = array_fill_keys($trips, [[INF, INF, INF], [null, null, null]]);
 // input
 $from = 'S';
 $to = 'T';
-$departureTimestamp = 4;
+$departureTimestamp = -1;
 
 $l->info(sprintf("Depart from %s to %s at %d\n\n", $from, $to, $departureTimestamp));
 $start = microtime(true);

@@ -20,9 +20,9 @@ global $l, $connections, $stops, $trips;
 //    return $c1['departure'] - $c2['departure'];
 //});
 
-foreach ($trips as $t) {
-    printTrip($t);
-}
+//foreach ($trips as $t) {
+//    printTrip($t);
+//}
 
 // sort by departure desc
 uasort($connections, function ($c1, $c2) {
