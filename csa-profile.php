@@ -37,7 +37,7 @@ $profiles = array_fill_keys($stops, [[INF, INF, null, null]]);
 $tripsEA = array_fill_keys($trips, [INF, null]);
 
 // input
-$from = 'S';
+$from = 'X';
 $to = 'T';
 $departureTimestamp = -1;
 
@@ -102,7 +102,8 @@ echo PHP_EOL;
 
 // ------------------ Results -----------------------
 
-//print_r($profiles);
+print_r($profiles);
+print_r($tripsEA);
 
 if (false === array_key_exists($from, $profiles)) {
     $l->info('No trips found!');

@@ -80,12 +80,26 @@ foreach ($connections as $cI => $c) {
     $isMin = $t < $currentTripEA;
     $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? [$cI, $cI, $cI] : $currentTripExitCons]; // todo: check exit conn
 
-    // earliest pair of departure stop
-    $q = $profiles[$c['from']][0][1];
+    //$p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]];
 
-    $x = minVector($q, $t);
+    // earliest pair of departure stop
+    //$q = $profiles[$c['from']][0][1];
+    $q = $profiles[$c['from']][0];
+
+    $x = minVector($q[1], $t);
+
+    $p = [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
+
     if (false === equalVectors($q, $x)) {
-        array_unshift($profiles[$c['from']], [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]);
+        if ($q[0] !== $p[0]) {
+            //array_unshift($profiles[$c['from']], $p);
+            //array_unshift($profiles[$c['from']], [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]);
+            array_unshift($profiles[$c['from']], $p);
+        } else {
+            $profiles[$c['from']][0] = $p;
+        }
+
+
     }
 }
 
