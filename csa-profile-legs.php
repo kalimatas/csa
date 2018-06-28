@@ -77,20 +77,46 @@ foreach ($connections as $cI => $c) {
     // Incorporate $t into $tripsEA and $profiles.
 
     [$currentTripEA, $currentTripExitCons] = $tripsEA[$c['trip']];
-    $isMin = $t < $currentTripEA;
-    $tripsEA[$c['trip']] = [$t, $t < $currentTripEA ? [$cI, $cI, $cI] : $currentTripExitCons]; // todo: check exit conn
+
+    // todo: another method?
+    $newTripExitCons = [];
+    foreach ($t as $numberOfICs => $arrivalTime) {
+        $newTripExitCons[$numberOfICs] = $arrivalTime < $currentTripEA[$numberOfICs]
+            ? $cI
+            : $currentTripExitCons[$numberOfICs];
+    }
+
+    $tripsEA[$c['trip']] = [$t, $newTripExitCons]; // todo: check exit conn
 
     //$p = [$c['departure'], $t, $cI, $tripsEA[$c['trip']][1]];
 
     // earliest pair of departure stop
     //$q = $profiles[$c['from']][0][1];
     $q = $profiles[$c['from']][0];
+    $qArrivalTimes = $q[1];
+    $qEnterConns = $q[2];
+    $qExitConns = $q[3];
 
     $x = minVector($q[1], $t);
 
-    $p = [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
-
     if (false === equalVectors($q, $x)) {
+        $newProfileEnterConns = [];
+        $newProfileExitConns = [];
+        foreach ($x as $numberOfICs => $arrivalTime) {
+            $arrivalTimeImproves = $arrivalTime < $qArrivalTimes[$numberOfICs];
+            $newProfileEnterConns[$numberOfICs] = $arrivalTimeImproves
+                ? $cI
+                : $qEnterConns[$numberOfICs];
+
+            $newProfileExitConns[$numberOfICs] = $arrivalTimeImproves
+                ? $newTripExitCons[$numberOfICs]
+                : $qExitConns[$numberOfICs];
+        }
+
+        //$p = [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
+        //$p = [$c['departure'], $x, $newProfileEnterConns, $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
+        $p = [$c['departure'], $x, $newProfileEnterConns, $newProfileExitConns]; // todo: enter/exit connections
+
         if ($q[0] !== $p[0]) {
             //array_unshift($profiles[$c['from']], $p);
             //array_unshift($profiles[$c['from']], [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]);
@@ -98,8 +124,6 @@ foreach ($connections as $cI => $c) {
         } else {
             $profiles[$c['from']][0] = $p;
         }
-
-
     }
 }
 
