@@ -97,26 +97,32 @@ foreach ($connections as $cI => $c) {
     $qEnterConns = $q[2];
     $qExitConns = $q[3];
 
-    $x = minVector($q[1], $t);
+    $x = minVector($qArrivalTimes, $t);
 
-    if (false === equalVectors($q, $x)) {
-        $newProfileEnterConns = [];
-        $newProfileExitConns = [];
-        foreach ($x as $numberOfICs => $arrivalTime) {
-            $arrivalTimeImproves = $arrivalTime < $qArrivalTimes[$numberOfICs];
-            $newProfileEnterConns[$numberOfICs] = $arrivalTimeImproves
-                ? $cI
-                : $qEnterConns[$numberOfICs];
+    //$newProfileEnterConns = [];
+    $newProfileEnterConns = [$cI, $cI, $cI];
+    //$newProfileExitConns = [];
+    $newProfileExitConns = $newTripExitCons;
+    //foreach ($x as $numberOfICs => $arrivalTime) {
+        //$arrivalTimeImproves = $arrivalTime < $qArrivalTimes[$numberOfICs];
+        //$newProfileEnterConns[$numberOfICs] = $arrivalTimeImproves
+        //    ? $cI
+        //    : $qEnterConns[$numberOfICs];
 
-            $newProfileExitConns[$numberOfICs] = $arrivalTimeImproves
-                ? $newTripExitCons[$numberOfICs]
-                : $qExitConns[$numberOfICs];
-        }
+        //$newProfileEnterConns[$numberOfICs] = $cI;
 
-        //$p = [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
-        //$p = [$c['departure'], $x, $newProfileEnterConns, $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
-        $p = [$c['departure'], $x, $newProfileEnterConns, $newProfileExitConns]; // todo: enter/exit connections
+        //$newProfileExitConns[$numberOfICs] = $arrivalTimeImproves
+        //    ? $newTripExitCons[$numberOfICs]
+        //    : $qExitConns[$numberOfICs];
 
+        //$newProfileExitConns[$numberOfICs] = $newTripExitCons[$numberOfICs];
+    //}
+
+    //$p = [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
+    //$p = [$c['departure'], $x, $newProfileEnterConns, $tripsEA[$c['trip']][1]]; // todo: enter/exit connections
+    $p = [$c['departure'], $x, $newProfileEnterConns, $newProfileExitConns]; // todo: enter/exit connections
+
+    if (false === equalVectors($qArrivalTimes, $x)) {
         if ($q[0] !== $p[0]) {
             //array_unshift($profiles[$c['from']], $p);
             //array_unshift($profiles[$c['from']], [$c['departure'], $x, [$cI, $cI, $cI], $tripsEA[$c['trip']][1]]);
